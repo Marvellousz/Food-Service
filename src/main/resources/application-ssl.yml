@@ -1,0 +1,29 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:ssl/keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: te-11a47f25-d68a-45fe-9893-d4899565478d  # Correct alias from keystore
+  servlet:
+    context-path: /food-service
+
+management:
+  server:
+    port: 8085
+    ssl:
+      enabled: false  # Keep management server as HTTP only
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.example.foodservice: INFO

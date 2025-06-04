@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<breakfast_menu>
+    <food>
+        <id>1</id>
+        <name>Palak paneer</name>
+        <price>$5.95</price>
+        <description>Fresh spinach leaves (palak) cooked with cubes of Paneer cheese in a rich and creamy tomato-based sauce.</description>
+        <calories>650</calories>
+    </food>
+    <food>
+        <id>2</id>
+        <name>Biryani</name>
+        <price>$7.95</price>
+        <description>A fragrant and flavorful Indian rice dish cooked with aromatic spices, herbs, and marinated meat or vegetables</description>
+        <calories>900</calories>
+    </food>
+    <food>
+        <id>3</id>
+        <name>Masala Dosa</name>
+        <price>$3.95</price>
+        <description>A crispy, thin rice crepe filled with a spiced potato mixture, often served with coconut chutney and sambar</description>
+        <calories>900</calories>
+    </food>
+    <food>
+        <id>4</id>
+        <name>Chole Bhature</name>
+        <price>$4.50</price>
+        <description>Chicken marinated in yogurt and a blend of spices, cooked in a tandoor (clay oven) for a smoky, charred flavor</description>
+        <calories>600</calories>
+    </food>
+    <food>
+        <id>5</id>
+        <name>Tandoori Chicken</name>
+        <price>$6.95</price>
+        <description>Chicken marinated in yogurt and spices and roasted in a tandoor, a cylindrical clay oven</description>
+        <calories>950</calories>
+    </food>
+</breakfast_menu>

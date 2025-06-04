@@ -1,0 +1,158 @@
+# Kubernetes deployment configuration for SSL-enabled Food Service
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: food-service-ssl
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: food-service-ssl-config
+  namespace: food-service-ssl
+data:
+  application.yml: |
+    server:
+      port: 8443
+      ssl:
+        enabled: true
+        key-store: classpath:ssl/keystore.p12
+        key-store-password: changeit
+        key-store-type: PKCS12
+        key-alias: te-11a47f25-d68a-45fe-9893-d4899565478d
+      servlet:
+        context-path: /food-service
+    
+    spring:
+      application:
+        name: food-service-ssl
+    
+    foodservice:
+      data:
+        file:
+          path: classpath:breakfast_menu.xml
+    
+    management:
+      server:
+        port: 8080
+        ssl:
+          enabled: false
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics
+          base-path: /actuator
+      endpoint:
+        health:
+          show-details: always
+    
+    logging:
+      level:
+        org.springframework.web: INFO
+        com.example.foodservice: INFO
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: food-service-ssl-deployment
+  namespace: food-service-ssl
+  labels:
+    app: food-service-ssl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: food-service-ssl
+  template:
+    metadata:
+      labels:
+        app: food-service-ssl
+    spec:
+      containers:
+      - name: food-service-ssl
+        image: marvellousz/food-service:ssl
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        - containerPort: 8080
+          name: management
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "ssl"
+        - name: JAVA_OPTS
+          value: "-Xmx512m -Xms256m"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        imagePullPolicy: Always
+      volumes:
+      - name: config-volume
+        configMap:
+          name: food-service-ssl-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: food-service-ssl-service
+  namespace: food-service-ssl
+  labels:
+    app: food-service-ssl
+spec:
+  type: LoadBalancer
+  ports:
+  - name: https
+    port: 8443
+    targetPort: 8443
+    protocol: TCP
+  - name: management
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: food-service-ssl
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: food-service-ssl-nodeport
+  namespace: food-service-ssl
+  labels:
+    app: food-service-ssl
+spec:
+  type: NodePort
+  ports:
+  - name: https
+    port: 8443
+    targetPort: 8443
+    nodePort: 30443
+    protocol: TCP
+  - name: management
+    port: 8080
+    targetPort: 8080
+    nodePort: 30080
+    protocol: TCP
+  selector:
+    app: food-service-ssl

@@ -1,0 +1,23 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /food-service
+
+spring:
+  application:
+    name: food-service
+
+# Configurable path for the XML food data file
+foodservice:
+  data:
+    file:
+      path: classpath:breakfast_menu.xml
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

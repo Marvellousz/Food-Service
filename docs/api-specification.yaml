@@ -1,0 +1,428 @@
+openapi: 3.0.3
+info:
+  title: Food Service API
+  description: |
+    A comprehensive RESTful API for managing food items and menus. This service provides
+    endpoints for retrieving food information, searching by name, and health monitoring.
+    
+    ## Features
+    - Complete food item management
+    - Name-based search functionality
+    - Health monitoring and metrics
+    - SSL/HTTPS support
+    - Kubernetes-ready deployment
+    
+    ## Authentication
+    Currently, this API does not require authentication. In production environments,
+    consider implementing JWT tokens or OAuth 2.0.
+    
+    ## Rate Limiting
+    No rate limiting is currently implemented. Consider adding rate limiting in
+    production environments.
+    
+  version: 1.0.0
+  contact:
+    name: Food Service API Support
+    email: support@foodservice.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server (HTTP)
+  - url: https://localhost:8443/food-service
+    description: Local development server (HTTPS)
+  - url: https://4.156.125.141:8443/food-service
+    description: Azure Kubernetes Service (Production)
+
+paths:
+  /api/foods:
+    get:
+      summary: Get all food items
+      description: |
+        Retrieves a complete list of all available food items in the menu.
+        This endpoint returns all food items without pagination.
+      operationId: getAllFoodItems
+      tags:
+        - Food Management
+      responses:
+        '200':
+          description: Successfully retrieved all food items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Food'
+              examples:
+                foodList:
+                  summary: Example food list
+                  value:
+                    - id: 1
+                      name: "Palak paneer"
+                      price: "$5.95"
+                      description: "Fresh spinach leaves (palak) cooked with cubes of Paneer cheese in a rich and creamy tomato-based sauce."
+                      calories: 650
+                    - id: 2
+                      name: "Biryani"
+                      price: "$7.95"
+                      description: "A fragrant and flavorful Indian rice dish with aromatic spices"
+                      calories: 900
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/foods/{id}:
+    get:
+      summary: Get food item by ID
+      description: |
+        Retrieves a specific food item by its unique identifier.
+        Returns detailed information about the food item including nutritional data.
+      operationId: getFoodItemById
+      tags:
+        - Food Management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier for the food item
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: Successfully retrieved the food item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Food'
+              examples:
+                palakPaneer:
+                  summary: Palak Paneer example
+                  value:
+                    id: 1
+                    name: "Palak paneer"
+                    price: "$5.95"
+                    description: "Fresh spinach leaves (palak) cooked with cubes of Paneer cheese in a rich and creamy tomato-based sauce."
+                    calories: 650
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/foods/search:
+    get:
+      summary: Search food items by name
+      description: |
+        Searches for food items by partial name matching. The search is case-insensitive
+        and returns all items that contain the search term in their name.
+      operationId: searchFoodItemsByName
+      tags:
+        - Food Management
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: |
+            Search term to find food items. Supports partial matching and is case-insensitive.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+          example: "paneer"
+      responses:
+        '200':
+          description: Successfully found matching food items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Food'
+              examples:
+                searchResults:
+                  summary: Search results for "paneer"
+                  value:
+                    - id: 1
+                      name: "Palak paneer"
+                      price: "$5.95"
+                      description: "Fresh spinach leaves (palak) cooked with cubes of Paneer cheese in a rich and creamy tomato-based sauce."
+                      calories: 650
+                emptyResults:
+                  summary: No matching results
+                  value: []
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /actuator/health:
+    get:
+      summary: Health check endpoint
+      description: |
+        Returns the health status of the application. This endpoint is used for
+        monitoring and load balancer health checks.
+      operationId: getHealth
+      tags:
+        - Monitoring
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+              examples:
+                healthy:
+                  summary: Healthy application
+                  value:
+                    status: "UP"
+                    components:
+                      diskSpace:
+                        status: "UP"
+                        details:
+                          total: 499963174912
+                          free: 91943014912
+                          threshold: 10485760
+                          exists: true
+        '503':
+          description: Application is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+              examples:
+                unhealthy:
+                  summary: Unhealthy application
+                  value:
+                    status: "DOWN"
+
+  /actuator/info:
+    get:
+      summary: Application information
+      description: |
+        Returns build and configuration information about the application.
+      operationId: getInfo
+      tags:
+        - Monitoring
+      responses:
+        '200':
+          description: Application information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationInfo'
+
+  /actuator/metrics:
+    get:
+      summary: Application metrics
+      description: |
+        Returns available application metrics for monitoring and observability.
+      operationId: getMetrics
+      tags:
+        - Monitoring
+      responses:
+        '200':
+          description: Available metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsInfo'
+
+components:
+  schemas:
+    Food:
+      type: object
+      required:
+        - id
+        - name
+        - price
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: Unique identifier for the food item
+          example: 1
+        name:
+          type: string
+          description: Name of the food item
+          maxLength: 100
+          example: "Palak paneer"
+        price:
+          type: string
+          description: Price of the food item in USD
+          pattern: '^\$\d+\.\d{2}$'
+          example: "$5.95"
+        description:
+          type: string
+          description: Detailed description of the food item
+          maxLength: 500
+          example: "Fresh spinach leaves (palak) cooked with cubes of Paneer cheese in a rich and creamy tomato-based sauce."
+        calories:
+          type: integer
+          format: int32
+          description: Caloric content of the food item
+          minimum: 0
+          maximum: 5000
+          example: 650
+      description: Represents a food item with all its details
+
+    HealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, OUT_OF_SERVICE, UNKNOWN]
+          description: Overall health status of the application
+          example: "UP"
+        components:
+          type: object
+          description: Health status of individual components
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: [UP, DOWN, OUT_OF_SERVICE, UNKNOWN]
+              details:
+                type: object
+                additionalProperties: true
+
+    ApplicationInfo:
+      type: object
+      properties:
+        app:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "food-service"
+            version:
+              type: string
+              example: "1.0.0"
+        build:
+          type: object
+          properties:
+            time:
+              type: string
+              format: date-time
+            version:
+              type: string
+        git:
+          type: object
+          properties:
+            branch:
+              type: string
+            commit:
+              type: object
+              properties:
+                id:
+                  type: string
+                time:
+                  type: string
+                  format: date-time
+
+    MetricsInfo:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+          description: List of available metric names
+
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the error occurred
+          example: "2024-01-15T10:30:00Z"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 404
+        error:
+          type: string
+          description: HTTP error description
+          example: "Not Found"
+        message:
+          type: string
+          description: Detailed error message
+          example: "Food item not found with id: 99"
+        path:
+          type: string
+          description: API path where the error occurred
+          example: "/api/foods/99"
+
+  responses:
+    NotFound:
+      description: The requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            foodNotFound:
+              summary: Food item not found
+              value:
+                timestamp: "2024-01-15T10:30:00Z"
+                status: 404
+                error: "Not Found"
+                message: "Food item not found with id: 99"
+                path: "/api/foods/99"
+
+    BadRequest:
+      description: The request was invalid or malformed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidParameter:
+              summary: Invalid search parameter
+              value:
+                timestamp: "2024-01-15T10:30:00Z"
+                status: 400
+                error: "Bad Request"
+                message: "Search name parameter cannot be empty"
+                path: "/api/foods/search"
+
+    InternalServerError:
+      description: An internal server error occurred
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            serverError:
+              summary: Internal server error
+              value:
+                timestamp: "2024-01-15T10:30:00Z"
+                status: 500
+                error: "Internal Server Error"
+                message: "An unexpected error occurred"
+                path: "/api/foods"
+
+tags:
+  - name: Food Management
+    description: Operations for managing food items and menus
+  - name: Monitoring
+    description: Health checks and application monitoring endpoints
+
+externalDocs:
+  description: Find more information about the Food Service API
+  url: https://github.com/your-username/food-service/blob/main/README.md
