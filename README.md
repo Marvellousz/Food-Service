@@ -1,4 +1,4 @@
-# Food Service - Spring Boot Application
+# food service - spring boot application
 
 A comprehensive RESTful Spring Boot application for managing food items and menus with SSL/HTTPS support, fully containerized and ready for production deployment on Azure Kubernetes Service (AKS).
 
